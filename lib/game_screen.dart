@@ -1,129 +1,7 @@
-/*import 'package:flutter/material.dart';
-import 'package:flip_card/flip_card.dart';
-
-class GameScreen extends StatefulWidget {
-  const GameScreen({super.key});
-
-  @override
-  State<GameScreen> createState() => _GameScreenState();
-}
-
-class _GameScreenState extends State<GameScreen> {
-  late List<String> allCards;
-  late List<String> cards;
-  late List<bool> matched;
-  late List<GlobalKey<FlipCardState>> cardKeys;
-  List<int> selectedIndiceCards = [];
-
-  @override
-  void initState() {
-    super.initState();
-    print("INITSTATE DEMARRE");
-    allCards = [
-      "assets/cards/abdo_allah_albrroti.jpg",
-      "assets/cards/abdelkrim_elkhatabi.jpg",
-      "assets/cards/yahya_sinouar.jpg",
-    ];
-    allCards.shuffle();
-    List<String> selectedCards = allCards.take(3).toList();
-    cards = [...selectedCards, ...selectedCards];
-    cards.shuffle();
-    matched = List.filled(cards.length, false);
-    cardKeys = List.generate(cards.length, (_) => GlobalKey<FlipCardState>());
-    print("cardKeys.length = ${cardKeys.length}");
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("know&Match")),
-      backgroundColor: Colors.grey,
-      body: GridView.builder(
-        padding: EdgeInsets.all(10),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 1,
-        ),
-        itemCount: cards.length,
-        itemBuilder: (context, index) {
-          return FlipCard(
-            key: cardKeys[index],
-            flipOnTouch: !matched[index],
-            direction: FlipDirection.HORIZONTAL,
-            onFlip: () => handleFlip(index),
-            back: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(cards[index]),
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-            front: Image.asset('assets/logo.jpg'),
-          );
-        },
-      ),
-    );
-  }
-
-  Future<void> handleFlip(int index) async {
-    selectedIndiceCards.add(index);
-    if (selectedIndiceCards.length == 2) {
-      int first = selectedIndiceCards[0];
-      int second = selectedIndiceCards[1];
-      if (cards[first] == cards[second]) {
-        matched[first] = true;
-        matched[second] = true;
-      } else {
-        await Future.delayed(Duration(seconds: 1));
-        cardKeys[first].currentState?.toggleCard();
-        cardKeys[second].currentState?.toggleCard();
-      }
-      selectedIndiceCards.clear();
-      setState(() {});
-    }
-    if (matched.every((m) => m)) {
-      await Future.delayed(
-        Duration(milliseconds: 300),
-      ); // Petite pause avant la popup
-      _showCongratulationsDialog();
-    }
-  }
-  void _showCongratulationsDialog(){
- showDialog(
-    context: context,
-    barrierDismissible: false, // Oblige à cliquer un bouton
-    builder: (context) {
-      return AlertDialog(
-        title: Text("🎉 Félicitations !"),
-        content: Text("Vous avez trouvé toutes les paires.\nVoulez-vous passer au niveau suivant ?"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Ferme le dialogue
-             GameScreen();      // Passe au niveau suivant
-            },
-            child: Text("Continuer"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Ferme le dialogue
-            },
-            child: Text("Quitter"),
-          ),
-        ],
-      );
-    },
-  );
-}
-}
-*/
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flip_card/flip_card.dart';
+import 'package:know_match/home_screen.dart';
 
 class GameScreen extends StatefulWidget {
   final int level;
@@ -153,8 +31,7 @@ class _GameScreenState extends State<GameScreen> {
 
 
   ];*/
-  int currentPersonIndex = 0;
-  Timer? _timer;
+  late int pairs;
   final List<Map<String, String>> personsInfo = [
     {
       "image": "assets/cards/محمد_عابد_الجابري.png",
@@ -265,21 +142,25 @@ class _GameScreenState extends State<GameScreen> {
     super.initState();
     allCards.shuffle();
     prepareCards();
-    _timer = Timer.periodic(const Duration(seconds: 60), (timer) {
-      setState(() {
-       currentPersonIndex = (currentPersonIndex + 1) % personsInfo.length;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
   }
 
   void prepareCards() {
-    int pairs = 1 + widget.level;
+    switch (widget.level) {
+      case 1:
+        pairs = 2;
+        break;
+      case 2:
+        pairs = 3;
+        break;
+      case 3:
+        pairs = 6;
+        break;
+      case 4:
+        pairs = 10;
+        break;
+      default:
+        pairs = 12;
+    }
     List<String> selectedCards = allCards.take(pairs).toList();
     cards = [...selectedCards, ...selectedCards];
     cards.shuffle();
@@ -294,97 +175,104 @@ class _GameScreenState extends State<GameScreen> {
       backgroundColor: Colors.grey,
       body: Column(
         children: [
-          Expanded(flex: 3,
-            child:  GridView.builder(
-        padding: EdgeInsets.all(10),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount:
-              ((widget.level + 1) % 4 == 0 || (widget.level + 1) == 2)
-              ? widget.level + 1
-              : (widget.level + 1) % 5 == 0
-              ? 5
-              : 3,
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 1,
-        ),
-        itemCount: cards.length,
-        itemBuilder: (context, index) {
-          return FlipCard(
-            key: cardKeys[index],
-            flipOnTouch: !matched[index],
-            direction: FlipDirection.HORIZONTAL,
-            onFlip: () => handleFlip(index),
-            back: Container(
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage(cards[index]),
-                  fit: BoxFit.cover,
-                ),
+          Expanded(
+            flex: 1,
+            child: GridView.builder(
+              padding: EdgeInsets.all(10),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: getOptimalCrossAxisCount(cards.length),
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1,
               ),
+              itemCount: cards.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _onCardTap(index),
+                  child: FlipCard(
+                    key: cardKeys[index],
+                    flipOnTouch: false,
+                    front: Image.asset('assets/logo.jpg'), // dos
+                    back: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage(cards[index]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-            front: Image.asset('assets/logo.jpg'),
-          );
-        },
-      ),),
-      Expanded(flex: 1,
-        child: buildPersonInfo())
+          ),
         ],
-      )
-     
+      ),
     );
   }
 
-  Future<void> handleFlip(int index) async {
-    selectedIndiceCards.add(index);
-    if (selectedIndiceCards.length == 2) {
-      int first = selectedIndiceCards[0];
-      int second = selectedIndiceCards[1];
-      if (cards[first] == cards[second]) {
-        matched[first] = true;
-        matched[second] = true;
-      } else {
-        await Future.delayed(Duration(seconds: 1));
-        cardKeys[first].currentState?.toggleCard();
-        cardKeys[second].currentState?.toggleCard();
-      }
-      selectedIndiceCards.clear();
-      setState(() {});
-    }
-    if (!matched.contains(false)) {
-      await Future.delayed(
-        Duration(milliseconds: 300),
-      ); // Petite pause avant la popup
-      _showCongratulationsDialog();
-    }
-  }
-
   void _showCongratulationsDialog() {
+    final imageMatched = cards.first;
+    final person = personsInfo.firstWhere(
+      (p) => p["image"] == imageMatched,
+      orElse: () => {
+        'image': "assests/logo.jpg",
+        'name': "inconu",
+        'info': "no information",
+      },
+    );
     showDialog(
       context: context,
       barrierDismissible: false, // Oblige à cliquer un bouton
       builder: (context) {
         return AlertDialog(
-          title: Text("🎉 Félicitations !"),
-          content: Text(
-            "Vous avez trouvé toutes les paires.\nVoulez-vous passer au niveau suivant ?",
+          title: Text("""🎉 أحسنت
+وراء كل صورة حكاية تستحق أن تروى 📖
+ !"""),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Image.asset(person['image']!, height: 100),
+              const SizedBox(height: 8),
+              Text(
+                person['name']!,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 100,
+                child: SingleChildScrollView(
+                  child: Text(
+                    person['info']!,
+                    textAlign: TextAlign.justify,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ),
+            ],
           ),
+
           actions: [
             TextButton(
               onPressed: () {
-                //Navigator.pop(context); // Ferme le dialogue
-                Navigator.pushReplacement(
+                Navigator.pop(context);
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(
                     builder: (context) => GameScreen(level: widget.level + 1),
                   ),
-                ); // Passe au niveau suivant
+                  (Route<dynamic> route) => false,
+                );
               },
               child: Text("Continuer"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Ferme le dialogue
+                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                ); // Ferme le dialogue
               },
               child: Text("Quitter"),
             ),
@@ -394,36 +282,49 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Widget buildPersonInfo() {
-    final person = personsInfo[currentPersonIndex];
-    return Container(
-      width: 200,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(blurRadius: 4, color: Colors.grey.shade400)],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.asset(person['image']!, height: 100),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            person['name']!,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            person['info']!,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14),
-          ),
-        ],
-      ),
-    );
+  int getOptimalCrossAxisCount(int itemCount) {
+    if (itemCount <= 4) return 2;
+    if (itemCount <= 6) return 3;
+    if (itemCount <= 12) return 3;
+    if (itemCount <= 16) return 4;
+    if (itemCount <= 20) return 4;
+    return 5; // Pour les niveaux supérieurs
+  }
+
+  Future<void> _onCardTap(int index) async {
+    // Si deja des cartes ouvertes, on ne fait rien
+    if (selectedIndiceCards.length >= 2) return;
+    cardKeys[index].currentState?.toggleCard();
+    await Future.delayed(Duration(milliseconds: 300));
+    // Puis traite la logique de paire
+    await handleMatch(index);
+  }
+
+  Future<void> handleMatch(int index) async {
+    selectedIndiceCards.add(index);
+    if (selectedIndiceCards.length == 2) {
+      int first = selectedIndiceCards[0];
+      int second = selectedIndiceCards[1];
+      if (cards[first] == cards[second]) {
+        matched[first] = true;
+        matched[second] = true;
+        setState(() {});
+      } else {
+        // Pas une paire on attend 500 ms que l’utilisateur voie les deux faces
+        await Future.delayed(Duration(milliseconds: 500));
+        // On referme les deux cartes ensemble
+        cardKeys[first].currentState?.toggleCard();
+        cardKeys[second].currentState?.toggleCard();
+        // Attend la fin d’animation
+        await Future.delayed(Duration(milliseconds: 300));
+        setState(() {});
+      }
+      selectedIndiceCards.clear();
+      // Si fin de jeu
+      if (!matched.contains(false)) {
+        await Future.delayed(Duration(milliseconds: 300));
+        _showCongratulationsDialog();
+      }
+    }
   }
 }
